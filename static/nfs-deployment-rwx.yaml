@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    test: liveness
+  name: liveness-exec
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      test: liveness
+  template:
+    metadata:
+      labels:
+        test: liveness
+    spec:
+      volumes:
+
+      # volume for nfs mount
+      - name: nfs-test
+        persistentVolumeClaim:
+          claimName: nfs-pvc # name of pvc
+      # volume for DownwardAPI pod introspection
+      - name: podinfo
+        downwardAPI:
+          items:
+            - path: "name"
+              fieldRef:
+                fieldPath: metadata.name
+
+      containers:
+      - name: liveness
+        image: k8s.gcr.io/busybox
+        args:
+        - /bin/sh
+        - -c
+        - touch /tmp/healthy; sleep 3000
+
+        # periodic liveness probe that reports back node,pod info written to shared NFS
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - echo $(date '+%Y-%m-%d %H:%M:%S') ISALIVE node=$MY_NODE_NAME pod=$MY_POD_NAME podip=$MY_POD_IP  >> /mnt/nfs1/liveness-exec
+          initialDelaySeconds: 5
+          periodSeconds: 20
+
+        volumeMounts:
+        # mount for shared NFS
+        - name: nfs-test # template.spec.volumes[].name
+          mountPath: /mnt/nfs1 # mount inside of container
+        # mount for Downward API introspection
+        - name: podinfo
+          mountPath: /etc/podinfo
+
+        # environment variables exposed
+        env:
+        - name: MY_POD_NAME
+          valueFrom:
+            fieldRef:
+               fieldPath: metadata.name
+        - name: MY_POD_IP
+          valueFrom:
+            fieldRef:
+               fieldPath: status.podIP
+        - name: MY_NODE_NAME
+          valueFrom:
+            fieldRef:
+               fieldPath: spec.nodeName
+

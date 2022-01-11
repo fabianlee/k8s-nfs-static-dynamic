@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nfs-pv
+  labels:
+    name: mynfs
+spec:
+  storageClassName: nfs-manual # same storage class as pvc
+  capacity:
+    storage: 100Mi
+  accessModes:
+    - ReadWriteMany # pvc must match
+  nfs:
+    server: 192.168.2.239 # ip addres of nfs server
+    path: "/data/nfs1" # path to exported directory (<nfs.server>:<nfs.path>)
