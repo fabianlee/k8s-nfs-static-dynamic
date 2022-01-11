@@ -2,17 +2,17 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    test: liveness
-  name: liveness-exec
+    test: nfs-liveness
+  name: nfs-liveness-exec
 spec:
   replicas: 3
   selector:
     matchLabels:
-      test: liveness
+      test: nfs-liveness
   template:
     metadata:
       labels:
-        test: liveness
+        test: nfs-liveness
     spec:
       volumes:
 
@@ -29,7 +29,7 @@ spec:
                 fieldPath: metadata.name
 
       containers:
-      - name: liveness
+      - name: nfs-liveness
         image: k8s.gcr.io/busybox
         args:
         - /bin/sh
@@ -42,7 +42,7 @@ spec:
             command:
             - /bin/sh
             - -c
-            - echo $(date '+%Y-%m-%d %H:%M:%S') ISALIVE node=$MY_NODE_NAME pod=$MY_POD_NAME podip=$MY_POD_IP  >> /mnt/nfs1/liveness-exec
+            - echo $(date '+%Y-%m-%d %H:%M:%S') ISALIVE node=$MY_NODE_NAME pod=$MY_POD_NAME podip=$MY_POD_IP  >> /mnt/nfs1/nfs-liveness-exec
           initialDelaySeconds: 5
           periodSeconds: 20
 
