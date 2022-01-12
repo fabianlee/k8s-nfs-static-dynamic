@@ -1,0 +1,27 @@
+apiVersion: apps/v1 
+kind: Deployment
+metadata:
+  labels:
+    app: sc-nginx
+  name: sc-nfs-nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sc-nginx
+  template:
+    metadata:
+      labels:
+        app: sc-nginx
+    spec:
+      volumes:
+      - name: nfs-test
+        persistentVolumeClaim:
+          claimName: sc-nfs-pvc
+      containers:
+      - image: nginx
+        name: nginx
+        volumeMounts:
+        - name: nfs-test # template.spec.volumes[].name
+          mountPath: /usr/share/nginx/html # mount inside of container
+          #readOnly: true # needed to enforce read-only on volume
